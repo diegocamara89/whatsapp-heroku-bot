@@ -1,34 +1,59 @@
-const venom = require('venom-bot');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const express = require('express');
 
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 3000;
 
+// Express server
 app.get('/', (req, res) => {
-  res.send('Bot is running');
+    res.send('WhatsApp Bot Server is running!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
 
-console.log('Starting bot...');
+// WhatsApp Client
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: false,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu'
+        ]
+    }
+});
 
-venom
-  .create({
-    session: 'test-session',
-    headless: false, // Vamos forçar o navegador a abrir
-    useChrome: true,
-    debug: true,
-    logQR: true,
-    browserArgs: ['--no-sandbox']
-  })
-  .then((client) => {
-    console.log('Bot initialized!');
-    client.onMessage((message) => {
-      console.log('Message received:', message.body);
+client.on('qr', (qr) => {
+    console.log('QR RECEIVED', qr);
+});
+
+client.on('ready', () => {
+    console.log('Client is ready!');
+});
+
+client.on('message', msg => {
+    if (msg.body == '!ping') {
+        msg.reply('pong');
+    }
+});
+
+// Initialize
+console.log('Initializing...');
+client.initialize()
+    .catch(err => {
+        console.error('Initialization error:', err);
     });
-  })
-  .catch((err) => {
-    console.error('Error initializing bot:', err);
-  });
+
+// Error handling
+process.on('uncaughtException', err => {
+    console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled rejection at:', promise, 'reason:', reason);
+});
