@@ -4,6 +4,10 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware necessário para processar as requisições
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Express server
 app.get('/', (req, res) => {
     res.send('WhatsApp Bot Server is running!');
@@ -12,7 +16,8 @@ app.get('/', (req, res) => {
 // Rota para enviar mensagens
 app.get('/send', async (req, res) => {
     try {
-        // O número deve estar no formato internacional: 5511999999999
+        console.log('Requisição recebida:', req.query); // Log para debug
+        
         const number = req.query.number;
         const message = req.query.message;
 
@@ -20,10 +25,11 @@ app.get('/send', async (req, res) => {
             return res.status(400).send('Número e mensagem são obrigatórios');
         }
 
-        const chatId = number + "@c.us"; // Formato necessário para o WhatsApp
+        const chatId = number + "@c.us";
+        console.log('Tentando enviar mensagem para:', chatId); // Log para debug
         
-        // Envia a mensagem
-        await client.sendMessage(chatId, message);
+        const result = await client.sendMessage(chatId, message);
+        console.log('Resultado do envio:', result); // Log para debug
         
         res.send('Mensagem enviada com sucesso!');
     } catch (error) {
@@ -57,18 +63,6 @@ client.on('qr', (qr) => {
 
 client.on('ready', () => {
     console.log('Client is ready!');
-    
-    // Teste de envio após conexão
-    const numeroTeste = "5584998353107"; // Substitua pelo número que quer testar
-    const chatId = numeroTeste + "@c.us";
-    
-    client.sendMessage(chatId, "Mensagem de teste do bot!")
-        .then(response => {
-            console.log('Mensagem enviada com sucesso!');
-        })
-        .catch(err => {
-            console.error('Erro ao enviar mensagem:', err);
-        });
 });
 
 client.on('message', msg => {
