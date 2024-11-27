@@ -5,7 +5,7 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Servidor HTTP (inicia imediatamente para satisfazer o Heroku)
+// Servidor HTTP (Heroku precisa disso para validar o app)
 app.get('/', (req, res) => {
   res.send('WhatsApp Bot is running!');
 });
@@ -14,53 +14,52 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// Inicialização do Venom (não bloqueia o servidor)
+// Inicialização do Venom
 const TWENTY_MINUTES = 1200000;
 let client = null;
 
-dateLog('Started index.js');
+console.log('Starting WhatsApp Bot');
 initBot();
 
 function initBot() {
-  dateLog('Initializing bot');
+  console.log('Initializing Venom...');
   venom
     .create(venomOptions)
     .then((_client) => {
+      console.log('Venom successfully initialized');
       client = _client;
       startBot(client);
     })
     .catch((err) => {
-      dateLog(`Error initializing bot: ${err}`);
+      console.error('Error initializing Venom:', err);
     });
 }
 
 function startBot(client) {
-  dateLog('Bot started');
+  console.log('Starting bot functionality');
 
-  // Reinicia o bot a cada 20 minutos
+  // Reinicia o bot após 20 minutos
   setTimeout(() => {
+    console.log('Restarting bot...');
     client.close();
-    dateLog('Bot closed');
     initBot();
   }, TWENTY_MINUTES);
 
-  // Exemplo de resposta automática
+  // Exemplo de funcionalidade do bot
   client.onMessage(reply);
 }
 
 function reply(message) {
   const sender = message.from;
-  dateLog(`Message received from: ${sender}`);
+  console.log(`Message received from: ${sender}`);
   const replyText = 'Hi!';
-  client.sendText(sender, replyText);
-  dateLog(`Message: "${replyText}" sent to: ${sender}`);
+  client.sendText(sender, replyText).then(() => {
+    console.log(`Message sent to: ${sender}`);
+  });
 }
 
-// Aux
-process.on('SIGINT', function () {
+// Tratamento de encerramento
+process.on('SIGINT', () => {
   if (client) client.close();
+  console.log('Bot stopped');
 });
-
-function dateLog(text) {
-  console.log(new Date(), '-', text);
-}
