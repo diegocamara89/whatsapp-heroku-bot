@@ -2,10 +2,10 @@ const venom = require('venom-bot');
 const venomOptions = require('./venom-options.js');
 const express = require('express');
 
-// Configuração do servidor para Heroku
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Servidor HTTP para atender ao Heroku
 app.get('/', (req, res) => {
   res.send('WhatsApp Bot is running!');
 });
@@ -14,6 +14,7 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+// Inicializa o bot Venom de forma assíncrona
 const TWENTY_MINUTES = 1200000;
 let client = null;
 
@@ -23,36 +24,27 @@ initBot();
 function initBot() {
   dateLog('Initializing bot');
   venom
-    // create bot with options
     .create(venomOptions)
-    // start bot
-    .then((client) => startBot(client))
-    // catch errors
+    .then((_client) => {
+      client = _client;
+      startBot(client);
+    })
     .catch((err) => {
-      dateLog(err);
+      dateLog(`Error initializing bot: ${err}`);
     });
 }
 
-function startBot(_client) {
-  dateLog('Starting bot');
-  client = _client;
+function startBot(client) {
+  dateLog('Bot started');
 
-  // restart bot every 20 minutes
-  // stops working otherwise
+  // Reinicia o bot a cada 20 minutos
   setTimeout(() => {
-    // close bot
     client.close();
-    dateLog('Closing bot');
-
-    // init bot again
+    dateLog('Bot closed');
     initBot();
   }, TWENTY_MINUTES);
 
-  //
-  // add your code here
-  //
-
-  // example: reply every message with "Hi!"
+  // Exemplo de resposta automática
   client.onMessage(reply);
 }
 
@@ -64,15 +56,11 @@ function reply(message) {
   dateLog(`Message: "${replyText}" sent to: ${sender}`);
 }
 
-//
 // Aux
-//
-
-// Catch ctrl+C
 process.on('SIGINT', function () {
-  client.close();
+  if (client) client.close();
 });
 
 function dateLog(text) {
-  console.log(new Date(), ' - ', text);
+  console.log(new Date(), '-', text);
 }
