@@ -5,7 +5,7 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Servidor HTTP para atender ao Heroku
+// Servidor HTTP (inicia imediatamente para satisfazer o Heroku)
 app.get('/', (req, res) => {
   res.send('WhatsApp Bot is running!');
 });
@@ -14,7 +14,7 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// Inicializa o bot Venom de forma assíncrona
+// Inicialização do Venom (não bloqueia o servidor)
 const TWENTY_MINUTES = 1200000;
 let client = null;
 
